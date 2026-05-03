@@ -11,6 +11,11 @@ const authUser = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email });
 
   if (user && (await user.matchPassword(password))) {
+    if (user.isSuspended) {
+      res.status(403);
+      throw new Error('Account suspended. Access denied.');
+    }
+
     generateToken(res, user._id);
 
     res.json({
@@ -182,6 +187,42 @@ const updateUser = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Suspend user
+// @route   PUT /api/users/:id/suspend
+// @access  Private/Admin
+const suspendUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+
+  if (user) {
+    if (user.isAdmin) {
+      res.status(400);
+      throw new Error('Admin users cannot be suspended');
+    }
+    user.isSuspended = true;
+    const updatedUser = await user.save();
+    res.json(updatedUser);
+  } else {
+    res.status(404);
+    throw new Error('User not found');
+  }
+});
+
+// @desc    Unsuspend user
+// @route   PUT /api/users/:id/unsuspend
+// @access  Private/Admin
+const unsuspendUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+
+  if (user) {
+    user.isSuspended = false;
+    const updatedUser = await user.save();
+    res.json(updatedUser);
+  } else {
+    res.status(404);
+    throw new Error('User not found');
+  }
+});
+
 export {
   authUser,
   registerUser,
@@ -192,4 +233,6 @@ export {
   deleteUser,
   getUserById,
   updateUser,
+  suspendUser,
+  unsuspendUser,
 };
