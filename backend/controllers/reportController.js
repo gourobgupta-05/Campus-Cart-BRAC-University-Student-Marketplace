@@ -4,6 +4,7 @@ import Report from '../models/reportModel.js';
 // @desc    Create new report
 // @route   POST /api/reports
 // @access  Private
+
 const createReport = asyncHandler(async (req, res) => {
   const { reportedUserId, reportedProductId, reason } = req.body;
 
@@ -51,4 +52,19 @@ const resolveReport = asyncHandler(async (req, res) => {
   }
 });
 
-export { createReport, getReports, resolveReport };
+// @desc    Delete report
+// @route   DELETE /api/reports/:id
+// @access  Private/Admin
+const deleteReport = asyncHandler(async (req, res) => {
+  const report = await Report.findById(req.params.id);
+
+  if (report) {
+    await Report.deleteOne({ _id: report._id });
+    res.json({ message: 'Report removed' });
+  } else {
+    res.status(404);
+    throw new Error('Report not found');
+  }
+});
+
+export { createReport, getReports, resolveReport, deleteReport };
