@@ -1,5 +1,5 @@
 import { apiSlice } from './apiSlice';
-import { REPORTS_URL } from '../constants'; // Needs to be added in constants
+import { REPORTS_URL } from '../constants';
 
 export const reportsApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -25,11 +25,20 @@ export const reportsApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['Report'],
     }),
+    deleteReport: builder.mutation({
+      query: (reportId) => ({
+        url: `${REPORTS_URL}/${reportId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Report'],
+    }),
   }),
 });
+
 
 export const {
   useGetReportsQuery,
   useCreateReportMutation,
   useResolveReportMutation,
+  useDeleteReportMutation,
 } = reportsApiSlice;
