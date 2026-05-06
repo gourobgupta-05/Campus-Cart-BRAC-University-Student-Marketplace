@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLogoutMutation } from '../slices/usersApiSlice';
 import { logout } from '../slices/authSlice';
+import { useGetConversationsQuery } from '../slices/messagesApiSlice';
 import SearchBox from './SearchBox';
 import logo from '../assets/logo.png';
 import { resetCart } from '../slices/cartSlice';
@@ -11,6 +12,9 @@ import { resetCart } from '../slices/cartSlice';
 const Header = () => {
   const { cartItems } = useSelector((state) => state.cart);
   const { userInfo } = useSelector((state) => state.auth);
+  
+  const { data: conversations } = useGetConversationsQuery(undefined, { skip: !userInfo });
+  const unreadCount = conversations ? conversations.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0) : 0;
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -63,6 +67,14 @@ const Header = () => {
                     <NavDropdown.Item as={Link} to='/seller/productlist'>
                       My Listings
                     </NavDropdown.Item>
+                    <NavDropdown.Item as={Link} to='/chat'>
+                      Messages
+                      {unreadCount > 0 && (
+                        <Badge pill bg='danger' style={{ marginLeft: '5px' }}>
+                          {unreadCount}
+                        </Badge>
+                      )}
+                    </NavDropdown.Item>
                     <NavDropdown.Item onClick={logoutHandler}>
                       Logout
                     </NavDropdown.Item>
@@ -85,6 +97,9 @@ const Header = () => {
                   </NavDropdown.Item>
                   <NavDropdown.Item as={Link} to='/admin/userlist'>
                     Users
+                  </NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to='/admin/reportlist'>
+                    Reports
                   </NavDropdown.Item>
                 </NavDropdown>
               )}

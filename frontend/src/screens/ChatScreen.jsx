@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Row, Col, ListGroup, Form, Button, Card } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -25,6 +25,7 @@ const ChatScreen = () => {
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [createReport, { isLoading: isReporting }] = useCreateReportMutation();
+  const messagesEndRef = useRef(null);
 
   const {
     data: conversations,
@@ -54,11 +55,24 @@ const ChatScreen = () => {
 
   useEffect(() => {
     if (activePartnerId && messages) {
-      markAsRead(activePartnerId).then(() => {
-        refetchConversations();
-      });
+      const hasUnreadFromPartner = messages.some(
+        (msg) => !msg.isRead && String(msg.sender?._id || msg.sender) === String(activePartnerId)
+      );
+      if (hasUnreadFromPartner) {
+        markAsRead(activePartnerId).then(() => {
+          refetchConversations();
+        });
+      }
     }
   }, [activePartnerId, messages, markAsRead, refetchConversations]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const submitHandler = async (e) => {
     e.preventDefault();
@@ -156,7 +170,7 @@ const ChatScreen = () => {
                 <>
                   {messages.length === 0 && <p className="text-center text-muted mt-auto mb-auto">Be the first to send a message!</p>}
                   {messages.map((msg) => {
-                    const isMine = msg.sender === userInfo._id;
+                    const isMine = String(msg.sender?._id || msg.sender) === String(userInfo._id);
                     return (
                       <div
                         key={msg._id}
@@ -170,6 +184,7 @@ const ChatScreen = () => {
                       </div>
                     );
                   })}
+                  <div ref={messagesEndRef} />
                 </>
               )}
             </Card.Body>
